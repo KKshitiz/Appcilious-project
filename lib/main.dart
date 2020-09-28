@@ -23,6 +23,13 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   bool isConnected = false;
+  void changeConnectionStatus() {
+    setState(() {
+      isConnected = !isConnected;
+      print('tapped');
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
@@ -35,7 +42,11 @@ class _HomePageState extends State<HomePage> {
             clipBehavior: Clip.none,
             children: [
               upperCurvedContainer(context),
-              circularButtonWidget(context, screenWidth),
+              CircularButtonWidget(
+                width: screenWidth,
+                isConnected: isConnected,
+                onTap: changeConnectionStatus,
+              ),
             ],
           ),
           SizedBox(
@@ -157,7 +168,9 @@ class ConnectedStatusText extends StatelessWidget {
           text: 'Status :',
           style: kConnectedStyle,
           children: [
-            TextSpan(text: ' connected\n', style: kConnectedGreenStyle),
+            connectionStatus
+                ? TextSpan(text: ' connected\n', style: kConnectedGreenStyle)
+                : TextSpan(text: ' disconnected\n', style: kConnectedRedStyle),
             TextSpan(text: '00:22:45', style: kConnectedSubtitleStyle),
           ],
         ),
@@ -166,57 +179,82 @@ class ConnectedStatusText extends StatelessWidget {
   }
 }
 
-Widget circularButtonWidget(BuildContext context, width) {
-  return Positioned(
-    bottom: -width * 0.35,
-    child: Stack(
-      alignment: Alignment.center,
-      children: [
-        Container(
-          height: width * 0.51,
-          width: width * 0.51,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: kCurveGradient,
-          ),
-          child: Center(
-            child: Container(
-              height: width * 0.4,
-              width: width * 0.4,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: kBgColor,
-              ),
+class CircularButtonWidget extends StatelessWidget {
+  final bool isConnected;
+  final double width;
+  final Function onTap;
+  CircularButtonWidget({this.isConnected, this.width, this.onTap});
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      bottom: -width * 0.35,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Container(
+            height: width * 0.51,
+            width: width * 0.51,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: kCurveGradient,
+            ),
+            child: GestureDetector(
+              onTap: onTap,
               child: Center(
                 child: Container(
-                  height: width * 0.3,
-                  width: width * 0.3,
+                  height: width * 0.4,
+                  width: width * 0.4,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: kGreenGradient,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Color(0xFF00D58D).withOpacity(0.2),
-                        spreadRadius: 15,
-                        blurRadius: 15,
-                      ),
-                    ],
+                    color: kBgColor,
                   ),
                   child: Center(
-                    child: Icon(
-                      Icons.wifi_lock,
-                      color: Colors.white,
-                      size: 50,
+                    child: AnimatedContainer(
+                      duration: Duration(milliseconds: 800),
+                      height: width * 0.3,
+                      width: width * 0.3,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: isConnected ? kGreenGradient : kRedGradient,
+                        boxShadow: [
+                          isConnected ? kGreenGlow : kRedGlow,
+                        ],
+                      ),
+                      child: Center(
+                        child: Icon(
+                          Icons.wifi_lock,
+                          color: Colors.white,
+                          size: 50,
+                        ),
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
           ),
-        )
-      ],
-    ),
-  );
+          Positioned(
+            left: 8,
+            top: 30,
+            child: Container(
+              padding: EdgeInsets.all(8),
+              height: 60,
+              width: 60,
+              decoration:
+                  BoxDecoration(color: kBgColor, shape: BoxShape.circle),
+              child: Center(
+                child: CircleAvatar(
+                  backgroundImage: NetworkImage(kIndiaFlagUrl),
+                  radius: 40,
+                  backgroundColor: Colors.transparent,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 Widget locationCard(title, cardBgColor, flag, country) {
